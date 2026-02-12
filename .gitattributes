@@ -1,0 +1,9 @@
+# Regla global: Git decide automáticamente si es texto o binario
+* text=auto
+
+# Rutas específicas para los wrappers de Maven
+core-api/mvnw text eol=lf
+core-api/mvnw.cmd text eol=crlf
+
+# .cmd en cualquier carpeta
+*.cmd text eol=crlf
