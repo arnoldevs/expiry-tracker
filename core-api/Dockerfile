@@ -4,5 +4,5 @@ WORKDIR /app
 COPY target/*.jar app.jar
 RUN chown springuser:springgroup app.jar
 USER springuser
-EXPOSE 8081
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
