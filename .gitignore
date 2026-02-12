@@ -1,6 +1,8 @@
 # Java
 **/target/
 **.class
+*.jar
+*.war
 
 # Node / Vue
 **/node_modules/
@@ -18,3 +20,7 @@
 
 # Secrets
 .env
+core-api/src/main/resources/application-dev.yml
+
+# Infra
+infra/pgadmin/servers.json

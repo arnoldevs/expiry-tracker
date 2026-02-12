@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "127.0.0.1:${EXTERNAL_PORT_DB}:${INTERNAL_PORT_DB}"
     networks:
       - expiry-network
     volumes:
@@ -36,10 +38,14 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     ports:
       - "127.0.0.1:${EXTERNAL_PORT_PGADMIN}:${INTERNAL_PORT_PGADMIN}"
     networks:
       - expiry-network
+    volumes:
+      - ./infra/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - pgadmin_data:/var/lib/pgadmin
     depends_on:
       database:
         condition: service_healthy
@@ -58,7 +64,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JWT_SECRET: ${JWT_SECRET}
+      SECURITY_JWT_SECRET: ${JWT_SECRET}
+      SECURITY_JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_DAYS}
     networks:
       - expiry-network
     deploy:
@@ -75,3 +82,4 @@ networks:
 
 volumes:
   postgres_data:
+  pgadmin_data:

@@ -1,0 +1,18 @@
+server:
+  port: ${EXTERNAL_PORT_API}
+
+spring:
+  application:
+    name: expiry-tracker-core-dev
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
