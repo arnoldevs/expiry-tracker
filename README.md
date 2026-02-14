@@ -8,6 +8,17 @@ Desarrollar un ecosistema escalable que trascienda el CRUD tradicional, integran
 
 ---
 
+## 📐 Arquitectura y Patrones
+
+Este proyecto sigue una **Arquitectura Hexagonal (Ports & Adapters)** para garantizar el desacoplamiento entre la lógica de negocio y la infraestructura.
+
+- **Domain Layer:** Lógica pura implementada con Java Records (Inmutable).
+- **Application Layer:** Casos de uso y orquestación de servicios.
+- **Infrastructure Layer:** Adaptadores para PostgreSQL (JPA), REST Controllers y configuración.
+- **Automation:** Scripts de `bash` y `just` para la gestión del entorno de desarrollo (DevEx).
+
+---
+
 ## 🛠️ Stack Tecnológico
 
 ### Backend & Distributed Systems
@@ -51,7 +62,7 @@ Desarrollar un ecosistema escalable que trascienda el CRUD tradicional, integran
 - [x] Provisionamiento de infraestructura base con Docker.
 - [x] Inicialización del Backend Core (Spring Boot).
 - [x] Versionamiento y gobernanza de código (GitAttributes/Ignore).
-- [ ] Modelado de dominio y persistencia (JPA Entities).
+- [x] Modelado de dominio y persistencia (Hexagonal: Ports, Adapters & JPA).
 
 ### Fase 2: Security & Identity 🔐
 
@@ -81,11 +92,12 @@ Desarrollar un ecosistema escalable que trascienda el CRUD tradicional, integran
 
 ## 📍 Service Map (Local Dev)
 
-| Servicio      | Endpoint (Host)         | Tecnología Interna (Container) | Descripción                        |
-| :------------ | :---------------------- | :----------------------------- | :--------------------------------- |
-| **Core API**  | `http://localhost:8080` | Spring Boot (Puerto 8080)      | Gateway y lógica de negocio (REST) |
-| **Dashboard** | `http://localhost:3000` | Vue 3 + Vite (Puerto 5173)     | SPA Reactiva para gestión          |
-| **pgAdmin**   | `http://localhost:5050` | pgAdmin 4 (Puerto 80)          | Administración visual de DB        |
+| Servicio       | Endpoint (Host)         | Tecnología    | Descripción                        |
+| :------------- | :---------------------- | :------------ | :--------------------------------- |
+| **Core API**   | `http://localhost:8080` | Spring Boot 4 | Gateway y lógica de negocio (REST) |
+| **Dashboard**  | `http://localhost:3000` | Vue 3 + Vite  | SPA Reactiva para gestión          |
+| **pgAdmin**    | `http://localhost:5050` | pgAdmin 4     | Administración visual de DB        |
+| **PostgreSQL** | `localhost:5432`        | PostgreSQL 15 | Base de datos relacional (JDBC)    |
 
 ---
 
@@ -95,19 +107,62 @@ Desarrollar un ecosistema escalable que trascienda el CRUD tradicional, integran
 - **Java 21 JDK** (Para desarrollo local)
 - **Node.js 20+** (Para desarrollo local en el Dashboard)
 - **Maven 3.9+** (Gestionado mediante `./mvnw`)
+- **Just** (Recomendado para automatización)
 
 ---
 
-## 💻 Setup Inicial
+## 💻 Setup de Desarrollo (Recomendado)
+
+Este proyecto utiliza un flujo híbrido para maximizar la velocidad: la infraestructura corre en Docker, pero la aplicación se ejecuta de forma nativa en tu máquina (Localhost).
+
+### 1. Iniciar Infraestructura (Docker)
+
+Utiliza **Just** para configurar el entorno y levantar la base de datos:
 
 ```bash
-git clone https://github.com/arnoldevs/expiry-tracker.git
-cd expiry-tracker
-
-# Configura las variables de entorno (Puertos y Secretos)
-cp .env.example .env
-# IMPORTANTE: Edita .env y ajusta los puertos o credenciales según tu entorno
-
-# Levanta la infraestructura
-docker compose up -d
+just infra
 ```
+
+> _Esto ejecuta el script `setup.sh` (generando `.env` y configs) y levanta los contenedores de soporte._
+
+### 2. Ejecutar el Backend (Java Local)
+
+Con la infraestructura lista, inicia la aplicación Spring Boot activando el perfil **`dev`**.
+
+#### Opción A: Vía Terminal (Maven)
+
+```bash
+cd core-api
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+#### Opción B: Vía VS Code (Spring Boot Dashboard)
+
+1. Abre el panel de **Spring Boot Dashboard** en la barra lateral.
+2. Haz clic derecho sobre la app `expiry-tracker-core`.
+3. Selecciona **"Run with Profile"** y elige **`dev`**.
+
+---
+
+## 🐳 Ejecución Full Stack (Modo Contenedor)
+
+Si deseas levantar todo el ecosistema (Frontend + Backend + DB) encapsulado en Docker para validar la integración final:
+
+```bash
+just full-run
+```
+
+> _Nota: Este modo reconstruye las imágenes de Docker. Úsalo para pruebas de integración, no para desarrollo activo (hot-reload)._
+
+---
+
+## ⚡ Comandos de Desarrollo (Justfile)
+
+Para agilizar el flujo de trabajo, se han configurado los siguientes atajos:
+
+| Comando         | Descripción                                                                                          |
+| :-------------- | :--------------------------------------------------------------------------------------------------- |
+| `just infra`    | Configura el entorno y levanta **solo** la base de datos y pgAdmin (Ideal para programar en el IDE). |
+| `just stop`     | Detiene los contenedores sin borrar datos.                                                           |
+| `just clean`    | ⚠️ **Borra** contenedores y volúmenes (Reinicia la DB desde cero).                                   |
+| `just full-run` | Reconstruye y levanta todo el stack (API + DB) en contenedores.                                      |
