@@ -3,6 +3,7 @@
 **.class
 *.jar
 *.war
+*.ear
 
 # Node / Vue
 **/node_modules/
@@ -17,10 +18,20 @@
 .idea/
 .DS_Store
 *.swp
+*.swo
+undo/
+.netrwhist
+.DS_Store
+Thumbs.db
+
+# Lombok / Annotation Processing
+.factorypath
 
 # Secrets
 .env
+core-api/src/main/resources/application-dev.properties
 core-api/src/main/resources/application-dev.yml
 
 # Infra
 infra/pgadmin/servers.json
+*.log
