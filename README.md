@@ -170,7 +170,7 @@ cd core-api
 cd ..
 ```
 
-> 💡 **Nota de desarrollo:** Si estás realizando pruebas rápidas de despliegue y ya validaste tus tests previamente, puedes acelerar el proceso usando `-DskipTests`, pero asegúrate de correr los tests antes de cualquier `git push`.
+> 💡 **Nota de desarrollo:** Si estás realizando pruebas rápidas de despliegue y ya validaste tus tests previamente, puedes acelerar el proceso usando `-DskipTests`, pero asegúrate de correr los tests antes de cualquier subida a producción.
 
 ### 2. Levantar Todo
 

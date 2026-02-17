@@ -26,6 +26,7 @@ public record Product(
     Objects.requireNonNull(id, "El ID del producto es obligatorio");
     Objects.requireNonNull(name, "El nombre del producto es obligatorio");
     Objects.requireNonNull(ean13, "El código EAN-13 es obligatorio");
+    Objects.requireNonNull(batchNumber, "El número de lote es obligatorio");
     Objects.requireNonNull(expiryDate, "La fecha de vencimiento es obligatoria");
     Objects.requireNonNull(category, "La categoría es obligatoria");
     Objects.requireNonNull(quantity, "El stock no puede ser nulo");
@@ -40,6 +41,9 @@ public record Product(
     }
     if (name.isBlank()) {
       throw new IllegalArgumentException("El nombre no puede estar vacío");
+    }
+    if (batchNumber.isBlank()) {
+      throw new IllegalArgumentException("El número de lote no puede estar vacío");
     }
   }
 
