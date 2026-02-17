@@ -1,7 +1,8 @@
-package com.carozzi.expirytracker.infrastructure.persistence.mappers;
+package com.carozzi.expirytracker.infrastructure.adapters.out.persistence.mappers;
 
 import com.carozzi.expirytracker.domain.model.User;
-import com.carozzi.expirytracker.infrastructure.persistence.entities.UserEntity;
+import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities.UserEntity;
+
 import org.springframework.stereotype.Component;
 
 @Component // Lo marcamos como componente para que Spring lo pueda inyectar

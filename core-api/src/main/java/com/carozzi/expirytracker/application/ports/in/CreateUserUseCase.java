@@ -1,4 +1,4 @@
-package com.carozzi.expirytracker.domain.ports.in;
+package com.carozzi.expirytracker.application.ports.in;
 
 import com.carozzi.expirytracker.domain.model.User;
 

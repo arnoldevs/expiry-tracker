@@ -1,10 +1,13 @@
-package com.carozzi.expirytracker.infrastructure.persistence.entities;
+package com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 
 import lombok.Getter;
@@ -23,8 +26,8 @@ import lombok.Builder;
 public class UserEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @Column(unique = true, nullable = false)
   private String username;

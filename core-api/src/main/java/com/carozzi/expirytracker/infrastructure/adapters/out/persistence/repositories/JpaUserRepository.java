@@ -1,10 +1,13 @@
-package com.carozzi.expirytracker.infrastructure.persistence.repositories;
+package com.carozzi.expirytracker.infrastructure.adapters.out.persistence.repositories;
 
-import com.carozzi.expirytracker.infrastructure.persistence.entities.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
 
-public interface JpaUserRepository extends JpaRepository<UserEntity, Long> {
+import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities.UserEntity;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface JpaUserRepository extends JpaRepository<UserEntity, UUID> {
 
   // Buscar por nombre de usuario (Spring escribirá el SQL por ti)
   Optional<UserEntity> findByUsername(String username);

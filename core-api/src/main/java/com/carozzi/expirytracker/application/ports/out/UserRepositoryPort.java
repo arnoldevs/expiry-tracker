@@ -1,7 +1,8 @@
-package com.carozzi.expirytracker.domain.ports.out;
+package com.carozzi.expirytracker.application.ports.out;
 
 import com.carozzi.expirytracker.domain.model.User;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Este es el "Puerto de Salida".
@@ -14,7 +15,7 @@ public interface UserRepositoryPort {
   User save(User user);
 
   // "Necesito buscar a alguien por su ID, pero puede que no exista (Optional)"
-  Optional<User> findById(Long id);
+  Optional<User> findById(UUID id);
 
   // "Necesito buscar por nombre de usuario para el login"
   Optional<User> findByUsername(String username);

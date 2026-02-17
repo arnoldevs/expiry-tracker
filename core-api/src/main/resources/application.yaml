@@ -1,21 +1,21 @@
 server:
-  port: ${INTERNAL_PORT_API}
+  port: ${INTERNAL_PORT_API:8080}
 
 spring:
   application:
     name: expiry-tracker-core
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/expiry_tracker_db_placeholder}
+    username: ${SPRING_DATASOURCE_USERNAME:db_user_placeholder}
+    password: ${SPRING_DATASOURCE_PASSWORD:change_me_in_env}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     open-in-view: false
-    show-sql: true
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
     properties:
       hibernate:
-        format_sql: true
+        "[format_sql]": true

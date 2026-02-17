@@ -101,6 +101,18 @@ Este proyecto sigue una **Arquitectura Hexagonal (Ports & Adapters)** para garan
 
 ---
 
+## ⚙️ Perfiles de Entorno (Profiles)
+
+El comportamiento de la aplicación se adapta mediante perfiles de Spring Boot:
+
+| Perfil     | Comando                          | Descripción                                                                                                             |
+| :--------- | :------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| **`dev`**  | `-Dspring-boot.run.profiles=dev` | **Desarrollo Local.** Activa logs detallados (DEBUG), muestra SQL formateado y conecta a la DB en Docker (`localhost`). |
+| **`test`** | _(Automático en tests)_          | **Pruebas.** Usado por JUnit. Utiliza una base de datos en memoria (H2) o TestContainers para aislar las pruebas.       |
+| **`prod`** | _(Por defecto en K8s)_           | **Producción.** Logs en formato JSON, sin consola H2, y optimizado para rendimiento.                                    |
+
+---
+
 ## 🛠️ Requisitos Previos
 
 - **Docker Engine** v24+ & **Docker Compose** v2.x
@@ -148,11 +160,27 @@ cd core-api
 
 Si deseas levantar todo el ecosistema (Frontend + Backend + DB) encapsulado en Docker para validar la integración final:
 
+**Importante:** Debes compilar el proyecto antes de construir la imagen.
+
+### 1. Compilar Artefacto (Package)
+
+```bash
+cd core-api
+./mvnw clean install
+cd ..
+```
+
+> 💡 **Nota de desarrollo:** Si estás realizando pruebas rápidas de despliegue y ya validaste tus tests previamente, puedes acelerar el proceso usando `-DskipTests`, pero asegúrate de correr los tests antes de cualquier `git push`.
+
+### 2. Levantar Todo
+
+Una vez generado el `.jar` en `target/`, levanta los contenedores:
+
 ```bash
 just full-run
 ```
 
-> _Nota: Este modo reconstruye las imágenes de Docker. Úsalo para pruebas de integración, no para desarrollo activo (hot-reload)._
+> **Nota:** Este modo reconstruye las imágenes. Úsalo para pruebas de integración, no para desarrollo activo (hot-reload).
 
 ---
 

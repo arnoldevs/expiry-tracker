@@ -1,8 +1,9 @@
 package com.carozzi.expirytracker.domain.model;
 
 import java.util.Objects;
+import java.util.UUID;
 
-public record User(Long id, String username, String email, String password) {
+public record User(UUID id, String username, String email, String password) {
   public User {
     // Nulidad
     Objects.requireNonNull(username, "Nombre de usuario obligatorio");

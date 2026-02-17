@@ -1,4 +1,4 @@
-package com.carozzi.expirytracker.config;
+package com.carozzi.expirytracker.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
