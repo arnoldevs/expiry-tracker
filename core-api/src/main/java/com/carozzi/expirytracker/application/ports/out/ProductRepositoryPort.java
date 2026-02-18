@@ -21,9 +21,8 @@ public interface ProductRepositoryPort {
   // Buscar por Código de Barras
   Optional<Product> findByEan13(String ean13);
 
-  // Validación Rápida
-  // Sirve para validar "No crear duplicados" sin cargar el objeto pesado
-  boolean existsByEan13(String ean13);
+  // Sirve para validar duplicidad de productos
+  boolean existsByEan13AndBatchNumber(String ean13, String batchNumber);
 
   // Listar todos
   List<Product> findAll();
