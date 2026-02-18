@@ -12,7 +12,7 @@ Desarrollar un ecosistema escalable que trascienda el CRUD tradicional, integran
 
 Este proyecto sigue una **Arquitectura Hexagonal (Ports & Adapters)** para garantizar el desacoplamiento entre la lógica de negocio y la infraestructura.
 
-- **Domain Layer:** Lógica pura implementada con Java Records (Inmutable).
+- **Domain Layer:** Lógica pura implementada con Java Records. Implementación de **UUID v7** como Primary Key para garantizar orden cronológico y alta eficiencia en indexación de base de datos.
 - **Application Layer:** Casos de uso y orquestación de servicios.
 - **Infrastructure Layer:** Adaptadores para PostgreSQL (JPA), REST Controllers y configuración.
 - **Automation:** Scripts de `bash` y `just` para la gestión del entorno de desarrollo (DevEx).
@@ -72,6 +72,7 @@ Este proyecto sigue una **Arquitectura Hexagonal (Ports & Adapters)** para garan
 
 ### Fase 3: Business Logic & Performance ⚙️
 
+- [x] Implementación de trazabilidad de productos (EAN-13 + Batch control).
 - [ ] CRUD transaccional de productos.
 - [ ] Algoritmos de cálculo de expiración y criticidad.
 - [ ] Capa de abstracción para **Redis** (Caching).
@@ -92,12 +93,12 @@ Este proyecto sigue una **Arquitectura Hexagonal (Ports & Adapters)** para garan
 
 ## 📍 Service Map (Local Dev)
 
-| Servicio       | Endpoint (Host)         | Tecnología    | Descripción                        |
-| :------------- | :---------------------- | :------------ | :--------------------------------- |
-| **Core API**   | `http://localhost:8080` | Spring Boot 4 | Gateway y lógica de negocio (REST) |
-| **Dashboard**  | `http://localhost:3000` | Vue 3 + Vite  | SPA Reactiva para gestión          |
-| **pgAdmin**    | `http://localhost:5050` | pgAdmin 4     | Administración visual de DB        |
-| **PostgreSQL** | `localhost:5432`        | PostgreSQL 15 | Base de datos relacional (JDBC)    |
+| Servicio       | Endpoint (Host)                | Tecnología    | Descripción                                |
+| :------------- | :----------------------------- | :------------ | :----------------------------------------- |
+| **Core API**   | `http://localhost:8080/api/v1` | Spring Boot 4 | Endpoints de trazabilidad y gestión (REST) |
+| **Dashboard**  | `http://localhost:3000`        | Vue 3 + Vite  | SPA Reactiva para gestión                  |
+| **pgAdmin**    | `http://localhost:5050`        | pgAdmin 4     | Administración visual de DB                |
+| **PostgreSQL** | `localhost:5432`               | PostgreSQL 15 | Base de datos relacional (JDBC)            |
 
 ---
 
