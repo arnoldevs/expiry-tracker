@@ -1,10 +1,16 @@
 package com.carozzi.expirytracker.application.ports.in;
 
 import com.carozzi.expirytracker.domain.model.Product;
+import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Caso de Uso encargado de orquestar la búsqueda avanzada de productos.
+ * Representa la lógica de negocio para filtrar el inventario.
+ */
 public interface FindProductUseCase {
 
 	/**
@@ -21,4 +27,13 @@ public interface FindProductUseCase {
 	 * @return Lista de productos (modelos de dominio).
 	 */
 	List<Product> findAll();
+
+	/**
+	 * Ejecuta la búsqueda de productos basada en los criterios de filtrado.
+	 *
+	 * @param criteria Contenedor de filtros opcionales proporcionados por el
+	 *                 usuario.
+	 * @return Listado de productos encontrados.
+	 */
+	List<Product> execute(ProductSearchCriteria criteria);
 }
