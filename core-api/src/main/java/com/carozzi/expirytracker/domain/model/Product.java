@@ -1,7 +1,6 @@
 package com.carozzi.expirytracker.domain.model;
 
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.UUID;
 
 public record Product(
@@ -22,28 +21,31 @@ public record Product(
 
   // Constructor Compacto
   public Product {
-    // 1. Validaciones de Integridad
-    Objects.requireNonNull(id, "El ID del producto es obligatorio");
-    Objects.requireNonNull(name, "El nombre del producto es obligatorio");
-    Objects.requireNonNull(ean13, "El código EAN-13 es obligatorio");
-    Objects.requireNonNull(batchNumber, "El número de lote es obligatorio");
-    Objects.requireNonNull(expiryDate, "La fecha de vencimiento es obligatoria");
-    Objects.requireNonNull(category, "La categoría es obligatoria");
-    Objects.requireNonNull(quantity, "El stock no puede ser nulo");
+    // Validaciones de Existencia
+    if (id == null)
+      throw new IllegalArgumentException("El ID del producto es obligatorio");
+    if (expiryDate == null)
+      throw new IllegalArgumentException("La fecha de vencimiento es obligatoria");
+    if (quantity == null)
+      throw new IllegalArgumentException("La cantidad no puede ser nula");
 
-    // 2. Validaciones de Formato
-    if (!ean13.matches("\\d{13}")) {
+    // Validaciones de Texto
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("El nombre del producto no puede estar vacío");
+    }
+    if (ean13 == null || !ean13.matches("\\d{13}")) {
       throw new IllegalArgumentException("El EAN-13 debe tener exactamente 13 dígitos numéricos");
     }
+    if (batchNumber == null || batchNumber.isBlank()) {
+      throw new IllegalArgumentException("El número de lote no puede estar vacío");
+    }
+    if (category == null || category.isBlank()) {
+      throw new IllegalArgumentException("La categoría es obligatoria");
+    }
 
+    // Validaciones de Lógica de Negocio
     if (quantity < 0) {
       throw new IllegalArgumentException("El stock no puede ser negativo");
-    }
-    if (name.isBlank()) {
-      throw new IllegalArgumentException("El nombre no puede estar vacío");
-    }
-    if (batchNumber.isBlank()) {
-      throw new IllegalArgumentException("El número de lote no puede estar vacío");
     }
   }
 

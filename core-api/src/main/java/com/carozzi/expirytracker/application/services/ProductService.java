@@ -1,6 +1,9 @@
 package com.carozzi.expirytracker.application.services;
 
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase;
+import com.carozzi.expirytracker.application.ports.in.FindProductUseCase;
+import java.util.List;
+import java.util.Optional;
 import com.carozzi.expirytracker.application.ports.out.ProductRepositoryPort;
 import com.carozzi.expirytracker.domain.model.Product;
 import com.fasterxml.uuid.Generators;
@@ -12,7 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService implements CreateProductUseCase {
+public class ProductService implements CreateProductUseCase, FindProductUseCase {
 
 	private final ProductRepositoryPort productRepository;
 
@@ -41,5 +44,17 @@ public class ProductService implements CreateProductUseCase {
 
 		// Persistencia
 		return productRepository.save(product);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<Product> findById(UUID id) {
+		return productRepository.findById(id);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Product> findAll() {
+		return productRepository.findAll();
 	}
 }
