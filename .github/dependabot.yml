@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Mantiene la lista de PRs limpia
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
+    # Ayuda a identificarlo rápido en 'gh pr list'
+    labels:
+      - "dependencies"
+      - "security"
+    open-pull-requests-limit: 5 # Con 5 es más que suficiente si están agrupadas

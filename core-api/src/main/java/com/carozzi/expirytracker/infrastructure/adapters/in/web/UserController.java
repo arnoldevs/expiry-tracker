@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class UserController {
 	private final CreateUserUseCase createUserUseCase;
 
 	@PostMapping
-	public ResponseEntity<User> createUser(@RequestBody UserRequest request) {
+	public ResponseEntity<User> createUser(@Valid @RequestBody UserRequest request) {
 		// Mapeamos el DTO al Command (Puerto de entrada)
 		var command = new CreateUserCommand(
 				request.username(),
