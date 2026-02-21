@@ -11,7 +11,8 @@ public record ProductSearchCriteria(
 		String ean,
 		String batch,
 		LocalDate expiredBefore,
-		Boolean isExpired) {
+		Boolean isExpired,
+		Integer daysThreshold) {
 
 	/**
 	 * Determina si el criterio no tiene información útil para realizar una
@@ -24,6 +25,8 @@ public record ProductSearchCriteria(
 				(ean == null || ean.isBlank()) &&
 				(batch == null || batch.isBlank()) &&
 				expiredBefore == null &&
-				isExpired == null;
+				isExpired == null &&
+				daysThreshold == null;
+
 	}
 }

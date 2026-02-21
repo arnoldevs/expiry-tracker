@@ -23,28 +23,32 @@ public class ProductService implements CreateProductUseCase, FindProductUseCase 
 	@Override
 	@Transactional
 	public Product create(CreateProductCommand command) {
-		// 1. Validar integridad: No duplicar lotes del mismo producto
-		if (productRepository.existsByEan13AndBatchNumber(command.ean13(), command.batchNumber())) {
-			throw new IllegalArgumentException(
-					String.format("Ya existe un registro para el producto [%s] con el lote [%s].",
-							command.ean13(), command.batchNumber()));
-		}
+		// Validar duplicidad (Fail First)
+		checkDuplicity(command.ean13(), command.batchNumber());
 
-		// Generar identidad UUID v7
-		UUID productId = Generators.timeBasedEpochGenerator().generate();
+		// Crear objeto de dominio (El record Product ya valida datos internos)
+		Product product = mapToProduct(command);
 
-		// Mapear a Dominio (el record valida integridad interna)
-		Product product = new Product(
-				productId,
-				command.ean13(),
-				command.name(),
-				command.batchNumber(),
-				command.expiryDate(),
-				command.quantity(),
-				command.category());
-
-		// Persistencia
+		// Persistir
 		return productRepository.save(product);
+	}
+
+	private void checkDuplicity(String ean, String batch) {
+		if (productRepository.existsByEan13AndBatchNumber(ean, batch)) {
+			throw new IllegalArgumentException(
+					String.format("Ya existe un registro para el producto [%s] con el lote [%s].", ean, batch));
+		}
+	}
+
+	private Product mapToProduct(CreateProductCommand cmd) {
+		return new Product(
+				Generators.timeBasedEpochGenerator().generate(),
+				cmd.ean13(),
+				cmd.name(),
+				cmd.batchNumber(),
+				cmd.expiryDate(),
+				cmd.quantity(),
+				cmd.category());
 	}
 
 	@Override

@@ -12,10 +12,19 @@ Desarrollar un ecosistema escalable que trascienda el CRUD tradicional, integran
 
 Este proyecto sigue una **Arquitectura Hexagonal (Ports & Adapters)** para garantizar el desacoplamiento entre la lógica de negocio y la infraestructura.
 
-- **Domain Layer:** Lógica pura implementada con Java Records. Implementación de **UUID v7** como Primary Key para garantizar orden cronológico y alta eficiencia en indexación de base de datos.
-- **Application Layer:** Casos de uso y orquestación de servicios.
-- **Infrastructure Layer:** Adaptadores para PostgreSQL (JPA), REST Controllers y configuración.
+- **Domain Layer:** Lógica pura implementada con Java Records. Implementación de **UUID v7** (Time-ordered) generado en la capa de aplicación para garantizar orden cronológico natural y optimizar la inserción en índices B-Tree de PostgreSQL.
+- **Application Layer:** Casos de uso y orquestación de servicios con validación de reglas de negocio centralizada.
+- **Infrastructure Layer:** Adaptadores para PostgreSQL utilizando **JPA Specifications** para consultas dinámicas, REST Controllers y configuración.
 - **Automation:** Scripts de `bash` y `just` para la gestión del entorno de desarrollo (DevEx).
+
+---
+
+## ✨ Features Destacadas
+
+- **Búsqueda Avanzada Dinámica:** Motor de filtrado que permite combinar múltiples criterios (EAN, lote, nombre) y estados lógicos (vencidos, por vencer, vigentes).
+- **Control de Expiración:** Cálculo inteligente de criticidad basado en umbrales de días configurables.
+- **Identidad de Alta Eficiencia:** Uso de UUID v7 para PKs, combinando la unicidad de un UUID con la eficiencia de búsqueda de un ID secuencial.
+- **Validación Robusta:** Protección de integridad para evitar duplicidad de lotes y parámetros de búsqueda vacíos.
 
 ---
 
@@ -73,6 +82,7 @@ Este proyecto sigue una **Arquitectura Hexagonal (Ports & Adapters)** para garan
 ### Fase 3: Business Logic & Performance ⚙️
 
 - [x] Implementación de trazabilidad de productos (EAN-13 + Batch control).
+- [x] Motor de búsqueda dinámica con **JPA Specifications** (Filtros múltiples y búsqueda parcial).
 - [ ] CRUD transaccional de productos.
 - [ ] Algoritmos de cálculo de expiración y criticidad.
 - [ ] Capa de abstracción para **Redis** (Caching).

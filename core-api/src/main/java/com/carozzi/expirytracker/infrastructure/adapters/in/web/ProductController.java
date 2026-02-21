@@ -64,8 +64,21 @@ public class ProductController {
 	}
 
 	/**
-	 * Búsqueda avanzada de productos con filtros opcionales.
-	 * Ejemplo de uso: GET /api/products/search?name=fideo&batch=L123
+	 * Realiza una búsqueda avanzada de productos aplicando múltiples filtros
+	 * opcionales.
+	 * La lógica interna utiliza JPA Specifications para generar una consulta SQL
+	 * dinámica.
+	 * *
+	 * <p>
+	 * Ejemplos de uso:
+	 * </p>
+	 * <ul>
+	 * <li>Buscar fideos por nombre: {@code GET /search?name=fideo}</li>
+	 * <li>Buscar productos que vencen en 7 días:
+	 * {@code GET /search?daysThreshold=7}</li>
+	 * <li>Buscar lotes específicos vencidos:
+	 * {@code GET /search?batch=L123&isExpired=true}</li>
+	 * </ul>
 	 *
 	 * @param name  Filtro parcial por nombre.
 	 * @param ean   Filtro exacto por EAN-13.
@@ -74,6 +87,16 @@ public class ProductController {
 	 * @param expiredBefore Fecha límite de vencimiento para búsqueda.
 	 * @param isExpired     Filtro booleano para obtener solo vencidos o solo
 	 *                      vigentes.
+	 * @param daysThreshold Umbral de días para búsqueda por proximidad. Filtra
+	 *                      productos que
+	 *                      vencerán dentro de los próximos N días (gestión
+	 *                      preventiva).
+	 * @return Una {@link ResponseEntity} que contiene la lista de {@link Product}
+	 *         que cumplen
+	 *         con todos los criterios proporcionados. Retorna lista vacía si no hay
+	 *         coincidencias.
+	 * @throws IllegalArgumentException si todos los parámetros de búsqueda son
+	 *                                  nulos o vacíos.
 	 */
 	@GetMapping("/search")
 	public ResponseEntity<List<Product>> search(
@@ -81,10 +104,11 @@ public class ProductController {
 			@RequestParam(required = false) String ean,
 			@RequestParam(required = false) String batch,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expiredBefore,
-			@RequestParam(required = false) Boolean isExpired) {
+			@RequestParam(required = false) Boolean isExpired,
+			@RequestParam(required = false) Integer daysThreshold) {
 
 		// Construimos el record de dominio con todos los parámetros
-		var criteria = new ProductSearchCriteria(name, ean, batch, expiredBefore, isExpired);
+		var criteria = new ProductSearchCriteria(name, ean, batch, expiredBefore, isExpired, daysThreshold);
 
 		// Ejecutamos el caso de uso
 		// El servicio lanzará IllegalArgumentException si criteria.isInvalid()

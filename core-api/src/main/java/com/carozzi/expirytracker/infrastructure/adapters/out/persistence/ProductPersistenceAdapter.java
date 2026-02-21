@@ -72,18 +72,39 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
 	 */
 	@Override
 	public List<Product> findByCriteria(ProductSearchCriteria criteria) {
-		// Specification.where(null) nos da un punto de partida limpio.
-		// .and() solo agregará la condición a la consulta SQL si la Specification no es
-		// nula.
-		Specification<ProductEntity> spec = Specification.where(nameLike(criteria.name()))
-				.and(eanEqual(criteria.ean()))
+		// Empezamos directamente con el primer filtro.
+		// Si nameLike devuelve null, Specification.where lo maneja correctamente.
+		Specification<ProductEntity> spec = Specification.where(nameLike(criteria.name()));
+
+		// Luego seguimos con los .and()
+		spec = spec.and(eanEqual(criteria.ean()))
 				.and(batchEqual(criteria.batch()))
 				.and(isExpired(criteria.isExpired()))
-				.and(expiredBefore(criteria.expiredBefore()));
+				.and(expiredBefore(criteria.expiredBefore()))
+				.and(isAboutToExpire(criteria.daysThreshold()));
 
 		return jpaProductRepository.findAll(spec).stream()
 				.map(productMapper::toDomain)
 				.toList();
+	}
+
+	/**
+	 * Filtra productos que vencerán dentro de un umbral de días.
+	 * Lógica: hoy <= expiryDate < (hoy + days)
+	 */
+	private Specification<ProductEntity> isAboutToExpire(Integer days) {
+		return (root, query, cb) -> {
+			if (days == null || days < 0)
+				return null;
+
+			LocalDate today = LocalDate.now();
+			LocalDate limitDate = today.plusDays(days);
+
+			// Genera: WHERE expiry_date >= today AND expiry_date < limitDate
+			return cb.and(
+					cb.greaterThanOrEqualTo(root.get("expiryDate"), today),
+					cb.lessThan(root.get("expiryDate"), limitDate));
+		};
 	}
 
 	/**
