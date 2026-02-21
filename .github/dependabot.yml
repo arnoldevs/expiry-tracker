@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "maven"
-    directory: "/"
+    directory: "/core-api"
     schedule:
       interval: "weekly"
     # Mantiene la lista de PRs limpia

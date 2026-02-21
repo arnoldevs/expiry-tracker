@@ -1,6 +1,7 @@
 package com.carozzi.expirytracker.infrastructure.adapters.out.persistence.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities.ProductEntity;
 
@@ -8,7 +9,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
 
-public interface JpaProductRepository extends JpaRepository<ProductEntity, UUID> {
+public interface JpaProductRepository
+		extends JpaRepository<ProductEntity, UUID>, JpaSpecificationExecutor<ProductEntity> {
 
 	// Buscar por código de barras (EAN-13)
 	Optional<ProductEntity> findByEan13(String ean13);
