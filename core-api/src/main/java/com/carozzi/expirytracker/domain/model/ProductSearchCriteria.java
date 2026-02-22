@@ -12,7 +12,16 @@ public record ProductSearchCriteria(
 		String batch,
 		LocalDate expiredBefore,
 		Boolean isExpired,
-		Integer daysThreshold) {
+		Integer daysThreshold,
+		ProductStatus status) {
+
+	/**
+	 * Crea una instancia con todos los filtros en null.
+	 * Útil para búsquedas globales donde se aplicarán los filtros por defecto.
+	 */
+	public static ProductSearchCriteria empty() {
+		return new ProductSearchCriteria(null, null, null, null, null, null, null);
+	}
 
 	/**
 	 * Determina si el criterio no tiene información útil para realizar una
@@ -26,7 +35,8 @@ public record ProductSearchCriteria(
 				(batch == null || batch.isBlank()) &&
 				expiredBefore == null &&
 				isExpired == null &&
-				daysThreshold == null;
+				daysThreshold == null &&
+				status == null;
 
 	}
 }

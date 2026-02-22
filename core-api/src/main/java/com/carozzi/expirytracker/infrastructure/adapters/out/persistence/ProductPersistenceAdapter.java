@@ -5,6 +5,8 @@ import com.carozzi.expirytracker.domain.model.Product;
 import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.mappers.ProductMapper;
 import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.repositories.JpaProductRepository;
 
+import jakarta.persistence.EnumType;
+
 import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
 import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities.ProductEntity;
 import org.springframework.data.jpa.domain.Specification;
@@ -16,6 +18,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
 import java.time.LocalDate;
+
+import com.carozzi.expirytracker.domain.model.ProductStatus;
 
 @Component
 @RequiredArgsConstructor
@@ -34,12 +38,14 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
 	@Override
 	public Optional<Product> findById(UUID id) {
 		return jpaProductRepository.findById(id)
+				.filter(entity -> entity.getStatus() == ProductStatus.ACTIVE)
 				.map(productMapper::toDomain);
 	}
 
 	@Override
 	public Optional<Product> findByEan13(String ean13) {
 		return jpaProductRepository.findByEan13(ean13)
+				.filter(entity -> entity.getStatus() == ProductStatus.ACTIVE)
 				.map(productMapper::toDomain);
 	}
 
@@ -50,42 +56,78 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
 
 	@Override
 	public List<Product> findAll() {
-		return jpaProductRepository.findAll()
-				.stream()
-				.map(productMapper::toDomain)
-				.toList();
+		return findByCriteria(ProductSearchCriteria.empty());
 	}
 
 	@Override
-	public void deleteById(UUID id) {
-		jpaProductRepository.deleteById(id);
+	public boolean existsById(UUID id) {
+		// Delegamos directamente al JpaRepository
+		return jpaProductRepository.existsById(id);
 	}
 
 	/**
-	 * Implementa la búsqueda dinámica utilizando JPA Specifications.
-	 * Se ha optado por esta aproximación para evitar la explosión de métodos
-	 * en el repositorio y manejar múltiples filtros opcionales de forma limpia.
-	 *
-	 * @param criteria Objeto de dominio con los filtros aplicados por el usuario.
-	 * @return Lista de productos que cumplen con todos los criterios
-	 *         proporcionados.
+	 * Realiza un "Soft Delete" del producto.
+	 * * En lugar de eliminar la fila física, recuperamos la entidad y
+	 * actualizamos su estado a DISCARDED.
+	 * * @param id Identificador único del producto.
+	 */
+	@Override
+	public void deleteById(UUID id) {
+		jpaProductRepository.findById(id).ifPresent(entity -> {
+			entity.setStatus(ProductStatus.DISCARDED);
+			jpaProductRepository.save(entity);
+		});
+	}
+
+	/**
+	 * Ejecuta una consulta dinámica basada en criterios opcionales.
+	 * * Lógica de Seguridad:
+	 * 1. Si el criterio incluye un estado específico (ej. DISCARDED), se filtra por
+	 * ese.
+	 * 2. Si el estado es null, se aplica por defecto ProductStatus.ACTIVE para
+	 * evitar mostrar productos eliminados en búsquedas generales.
 	 */
 	@Override
 	public List<Product> findByCriteria(ProductSearchCriteria criteria) {
-		// Empezamos directamente con el primer filtro.
-		// Si nameLike devuelve null, Specification.where lo maneja correctamente.
-		Specification<ProductEntity> spec = Specification.where(nameLike(criteria.name()));
 
-		// Luego seguimos con los .and()
-		spec = spec.and(eanEqual(criteria.ean()))
+		// Determinamos el estado objetivo (Seguridad por defecto)
+		ProductStatus targetStatus = (criteria.status() != null)
+				? criteria.status()
+				: ProductStatus.ACTIVE;
+
+		// Iniciamos la especificación con el estado
+		Specification<ProductEntity> spec = Specification.where(statusEqual(targetStatus));
+
+		spec = spec.and(nameLike(criteria.name()))
+				.and(eanEqual(criteria.ean()))
 				.and(batchEqual(criteria.batch()))
 				.and(isExpired(criteria.isExpired()))
 				.and(expiredBefore(criteria.expiredBefore()))
 				.and(isAboutToExpire(criteria.daysThreshold()));
 
+		// Ejecutamos y mapeamos a dominio
 		return jpaProductRepository.findAll(spec).stream()
 				.map(productMapper::toDomain)
 				.toList();
+	}
+
+	/**
+	 * Crea una especificación para filtrar por el estado del producto en la base de
+	 * datos.
+	 * *
+	 * <p>
+	 * Se utiliza {@link EnumType#STRING} en la persistencia, por lo que esta
+	 * especificación
+	 * genera una comparación directa contra la columna 'status'.
+	 * </p>
+	 *
+	 * @param status El estado deseado (ej. ACTIVE, SOLD, DISCARDED).
+	 * @return Una {@link Specification} que representa la restricción de igualdad
+	 *         por estado.
+	 */
+	private Specification<ProductEntity> statusEqual(ProductStatus status) {
+		return (root, query, cb) -> (status == null) ? null
+				: cb.equal(root.get("status"), status);
 	}
 
 	/**

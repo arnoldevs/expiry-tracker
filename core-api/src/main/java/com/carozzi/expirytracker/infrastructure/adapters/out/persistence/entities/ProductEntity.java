@@ -1,10 +1,8 @@
 package com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.Id;
-import jakarta.persistence.Column;
+import com.carozzi.expirytracker.domain.model.ProductStatus;
+
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -47,4 +45,8 @@ public class ProductEntity {
 
 	@Column(nullable = false)
 	private String category;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "status", nullable = false, length = 20)
+	private ProductStatus status;
 }

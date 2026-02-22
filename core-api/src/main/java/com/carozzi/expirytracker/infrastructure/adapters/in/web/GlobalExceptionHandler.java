@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -115,10 +116,30 @@ public class GlobalExceptionHandler {
 			case "Integer", "Long" -> "un número entero";
 			case "LocalDate" -> "una fecha (AAAA-MM-DD)";
 			case "Boolean" -> "un valor booleano (true/false)";
+			case "ProductStatus" -> "uno de los siguientes valores: ACTIVE, SOLD, DISCARDED";
 			default -> "el formato correcto";
 		};
 
 		body.put("message", String.format("El parámetro '%s' requiere %s.", parameterName, friendlyType));
+
+		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+	}
+
+	/**
+	 * Captura cuando el JSON es inválido, está mal formado o simplemente no se
+	 * envió.
+	 * Esto evita que un error de sintaxis del cliente se convierta en un error 500
+	 * del servidor.
+	 */
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+		Map<String, Object> body = new LinkedHashMap<>();
+		body.put("timestamp", LocalDateTime.now());
+		body.put("status", HttpStatus.BAD_REQUEST.value());
+		body.put("error", "Cuerpo de solicitud (JSON) inválido o faltante");
+
+		// Mensaje amigable para el frontend
+		body.put("message", "No se recibió ningún JSON o el formato es incorrecto. Verifique la sintaxis.");
 
 		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
 	}

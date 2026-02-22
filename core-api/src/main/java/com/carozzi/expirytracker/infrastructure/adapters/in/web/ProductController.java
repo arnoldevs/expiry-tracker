@@ -3,7 +3,9 @@ package com.carozzi.expirytracker.infrastructure.adapters.in.web;
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase.CreateProductCommand;
 import com.carozzi.expirytracker.application.ports.in.FindProductUseCase;
+import com.carozzi.expirytracker.application.ports.in.DeleteProductUseCase;
 import com.carozzi.expirytracker.domain.model.Product;
+import com.carozzi.expirytracker.domain.model.ProductStatus;
 import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
 import com.carozzi.expirytracker.infrastructure.adapters.in.web.dtos.ProductRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.NoSuchElementException;
 
 import jakarta.validation.Valid;
 
@@ -25,10 +28,10 @@ public class ProductController {
 
 	private final CreateProductUseCase createProductUseCase;
 	private final FindProductUseCase findProductUseCase;
+	private final DeleteProductUseCase deleteProductUseCase;
 
 	@PostMapping
 	public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest request) {
-		// Mapeo manual del DTO al Comando de Aplicación
 		var command = new CreateProductCommand(
 				request.ean13(),
 				request.name(),
@@ -42,8 +45,9 @@ public class ProductController {
 	}
 
 	/**
-	 * Obtiene todos los productos del inventario.
-	 * El campo 'isExpired' se calcula dinámicamente en el modelo de dominio.
+	 * Obtiene todos los productos ACTIVOS del inventario.
+	 * Gracias al filtro base en el PersistenceAdapter, este método ya no
+	 * devolverá productos SOLD o DISCARDED por error.
 	 */
 	@GetMapping
 	public ResponseEntity<List<Product>> getAll() {
@@ -60,7 +64,7 @@ public class ProductController {
 	public ResponseEntity<Product> getById(@PathVariable UUID id) {
 		return findProductUseCase.findById(id)
 				.map(ResponseEntity::ok)
-				.orElseThrow(() -> new java.util.NoSuchElementException("No se encontró el producto con ID: " + id));
+				.orElseThrow(() -> new NoSuchElementException("No se encontró el producto con ID: " + id));
 	}
 
 	/**
@@ -74,29 +78,21 @@ public class ProductController {
 	 * </p>
 	 * <ul>
 	 * <li>Buscar fideos por nombre: {@code GET /search?name=fideo}</li>
-	 * <li>Buscar productos que vencen en 7 días:
-	 * {@code GET /search?daysThreshold=7}</li>
+	 * <li>Buscar productos descartados: {@code GET /search?status=DISCARDED}</li>
 	 * <li>Buscar lotes específicos vencidos:
 	 * {@code GET /search?batch=L123&isExpired=true}</li>
 	 * </ul>
 	 *
-	 * @param name  Filtro parcial por nombre.
-	 * @param ean   Filtro exacto por EAN-13.
-	 * @param batch Filtro exacto por lote.
+	 * @param name   Filtro parcial por nombre.
+	 * @param ean    Filtro exacto por EAN-13.
+	 * @param batch  Filtro exacto por lote.
+	 * @param status Filtro por estado del producto (ACTIVE, SOLD, DISCARDED).
 	 * @return Lista de productos filtrados.
 	 * @param expiredBefore Fecha límite de vencimiento para búsqueda.
 	 * @param isExpired     Filtro booleano para obtener solo vencidos o solo
 	 *                      vigentes.
-	 * @param daysThreshold Umbral de días para búsqueda por proximidad. Filtra
-	 *                      productos que
-	 *                      vencerán dentro de los próximos N días (gestión
-	 *                      preventiva).
-	 * @return Una {@link ResponseEntity} que contiene la lista de {@link Product}
-	 *         que cumplen
-	 *         con todos los criterios proporcionados. Retorna lista vacía si no hay
-	 *         coincidencias.
-	 * @throws IllegalArgumentException si todos los parámetros de búsqueda son
-	 *                                  nulos o vacíos.
+	 * @param daysThreshold Umbral de días para búsqueda por proximidad.
+	 * @return Una {@link ResponseEntity} que contiene la lista de {@link Product}.
 	 */
 	@GetMapping("/search")
 	public ResponseEntity<List<Product>> search(
@@ -105,15 +101,24 @@ public class ProductController {
 			@RequestParam(required = false) String batch,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expiredBefore,
 			@RequestParam(required = false) Boolean isExpired,
-			@RequestParam(required = false) Integer daysThreshold) {
+			@RequestParam(required = false) Integer daysThreshold,
+			@RequestParam(required = false) ProductStatus status) {
 
-		// Construimos el record de dominio con todos los parámetros
-		var criteria = new ProductSearchCriteria(name, ean, batch, expiredBefore, isExpired, daysThreshold);
+		// Construimos el record de dominio incluyendo el campo status
+		var criteria = new ProductSearchCriteria(name, ean, batch, expiredBefore, isExpired, daysThreshold, status);
 
-		// Ejecutamos el caso de uso
-		// El servicio lanzará IllegalArgumentException si criteria.isInvalid()
 		List<Product> results = findProductUseCase.execute(criteria);
-
 		return ResponseEntity.ok(results);
+	}
+
+	/**
+	 * Endpoint para realizar el Soft Delete (Descarte) de un producto.
+	 * Aunque internamente cambia el estado a DISCARDED, seguimos
+	 * la convención REST de usar DELETE.
+	 */
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> delete(@PathVariable UUID id) {
+		deleteProductUseCase.delete(id);
+		return ResponseEntity.noContent().build();
 	}
 }

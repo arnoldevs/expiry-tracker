@@ -20,7 +20,8 @@ public class ProductMapper {
 				entity.getBatchNumber(),
 				entity.getExpiryDate(),
 				entity.getQuantity(),
-				entity.getCategory());
+				entity.getCategory(),
+				entity.getStatus());
 	}
 
 	// De Dominio (Corazón) a Entidad (Base de Datos)
@@ -36,6 +37,7 @@ public class ProductMapper {
 				.expiryDate(domain.expiryDate())
 				.quantity(domain.quantity())
 				.category(domain.category())
+				.status(domain.status())
 				.build();
 	}
 }
