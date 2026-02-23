@@ -2,13 +2,16 @@ package com.carozzi.expirytracker.application.services;
 
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.FindProductUseCase;
+import com.carozzi.expirytracker.application.ports.in.UpdateProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.DeleteProductUseCase;
 import com.carozzi.expirytracker.application.ports.out.ProductRepositoryPort;
 import com.carozzi.expirytracker.domain.model.Product;
 import com.carozzi.expirytracker.domain.model.ProductStatus;
 import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
+
 import com.fasterxml.uuid.Generators;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +28,8 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
-public class ProductService implements CreateProductUseCase, FindProductUseCase, DeleteProductUseCase {
+public class ProductService
+		implements CreateProductUseCase, FindProductUseCase, UpdateProductUseCase, DeleteProductUseCase {
 
 	private final ProductRepositoryPort productRepository;
 
@@ -137,5 +141,49 @@ public class ProductService implements CreateProductUseCase, FindProductUseCase,
 
 		// El Adapter se encargará de que sea Soft Delete.
 		productRepository.deleteById(id);
+	}
+
+	/**
+	 * Actualiza un producto existente.
+	 * Valida reglas de negocio para asegurar la consistencia del inventario.
+	 */
+	@Override
+	@Transactional
+	public Product update(UUID id, UpdateProductCommand command) {
+		// Recupera el producto actual (Fail Fast si no existe)
+		Product currentProduct = productRepository.findById(id)
+				.orElseThrow(
+						() -> new NoSuchElementException("No se puede actualizar: El producto con ID [" + id + "] no existe."));
+
+		// Boqueo de edición para productos no activos.
+		if (currentProduct.status() != ProductStatus.ACTIVE) {
+			throw new IllegalArgumentException(
+					"No se puede editar un producto que no está ACTIVO (Estado actual: " + currentProduct.status() + ")");
+		}
+
+		// Valida Duplicidad (Solo si cambió EAN o Lote)
+		// Si el EAN o el Lote son distintos a los que ya tenía, verificamos que la
+		// nueva combinación no exista en otro lado.
+		boolean eanChanged = !currentProduct.ean13().equals(command.ean13());
+		boolean batchChanged = !currentProduct.batchNumber().equals(command.batchNumber());
+
+		if (eanChanged || batchChanged) {
+			checkDuplicity(command.ean13(), command.batchNumber());
+		}
+
+		// Construye la nueva versión del producto (Record inmutable)
+		// Mantenemos el ID original y el Estado original.
+		Product updatedProduct = new Product(
+				currentProduct.id(),
+				command.ean13(),
+				command.name(),
+				command.batchNumber(),
+				command.expiryDate(),
+				command.quantity(),
+				command.category(),
+				currentProduct.status());
+
+		// Persistimos
+		return productRepository.save(updatedProduct);
 	}
 }

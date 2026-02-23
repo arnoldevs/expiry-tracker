@@ -3,12 +3,16 @@ package com.carozzi.expirytracker.infrastructure.adapters.in.web;
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase.CreateProductCommand;
 import com.carozzi.expirytracker.application.ports.in.FindProductUseCase;
+import com.carozzi.expirytracker.application.ports.in.UpdateProductUseCase;
+import com.carozzi.expirytracker.application.ports.in.UpdateProductUseCase.UpdateProductCommand;
 import com.carozzi.expirytracker.application.ports.in.DeleteProductUseCase;
 import com.carozzi.expirytracker.domain.model.Product;
 import com.carozzi.expirytracker.domain.model.ProductStatus;
 import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
 import com.carozzi.expirytracker.infrastructure.adapters.in.web.dtos.ProductRequest;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +32,7 @@ public class ProductController {
 
 	private final CreateProductUseCase createProductUseCase;
 	private final FindProductUseCase findProductUseCase;
+	private final UpdateProductUseCase updateProductUseCase;
 	private final DeleteProductUseCase deleteProductUseCase;
 
 	@PostMapping
@@ -120,5 +125,27 @@ public class ProductController {
 	public ResponseEntity<Void> delete(@PathVariable UUID id) {
 		deleteProductUseCase.delete(id);
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * Actualiza un producto existente por su ID.
+	 * Es idempotente: si envías los mismos datos varias veces, el resultado es el
+	 * mismo.
+	 */
+	@PutMapping("/{id}")
+	public ResponseEntity<Product> updateProduct(
+			@PathVariable UUID id,
+			@Valid @RequestBody ProductRequest request) {
+
+		var command = new UpdateProductCommand(
+				request.ean13(),
+				request.name(),
+				request.batchNumber(),
+				request.expiryDate(),
+				request.quantity(),
+				request.category());
+
+		Product updatedProduct = updateProductUseCase.update(id, command);
+		return ResponseEntity.ok(updatedProduct);
 	}
 }
