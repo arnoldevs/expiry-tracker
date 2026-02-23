@@ -27,6 +27,12 @@ public interface ProductRepositoryPort {
   // Sirve para validar duplicidad de productos
   boolean existsByEan13AndBatchNumber(String ean13, String batchNumber);
 
+  /**
+   * Verifica si un producto existe en el sistema por su identificador único.
+   * Fundamental para validaciones previas a la eliminación o actualización.
+   */
+  boolean existsById(UUID id);
+
   // Listar todos
   List<Product> findAll();
 

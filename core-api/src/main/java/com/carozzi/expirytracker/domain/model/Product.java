@@ -16,7 +16,8 @@ public record Product(
     String batchNumber, // Lote para trazabilidad
     LocalDate expiryDate,
     Integer quantity, // Stock disponible
-    String category // Categoría (Salsas, Pastas, Mascotas, Congelados, etc.)
+    String category, // Categoría (Salsas, Pastas, Mascotas, Congelados, etc.)
+    ProductStatus status // Estado de trazabilidad
 ) {
 
   // Constructor Compacto
@@ -28,6 +29,8 @@ public record Product(
       throw new IllegalArgumentException("La fecha de vencimiento es obligatoria");
     if (quantity == null)
       throw new IllegalArgumentException("La cantidad no puede ser nula");
+    if (status == null)
+      throw new IllegalArgumentException("El estado del producto es obligatorio");
 
     // Validaciones de Texto
     if (name == null || name.isBlank()) {
@@ -55,10 +58,16 @@ public record Product(
     return LocalDate.now().isAfter(this.expiryDate);
   }
 
+  /**
+   * Solo nos interesa alertar si el producto
+   * está ACTIVE. Si ya fue SOLD o DISCARDED, la alerta no tiene sentido.
+   */
   public boolean isAboutToExpire(int daysThreshold) {
+    if (this.status != ProductStatus.ACTIVE) {
+      return false;
+    }
     LocalDate today = LocalDate.now();
     LocalDate warningDate = today.plusDays(daysThreshold);
-    // Retorna true si NO ha vencido aún Y vence antes del umbral de aviso
     return !isExpired() && this.expiryDate.isBefore(warningDate);
   }
 }

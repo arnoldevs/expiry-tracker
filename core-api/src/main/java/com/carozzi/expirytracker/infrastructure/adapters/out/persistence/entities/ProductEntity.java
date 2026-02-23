@@ -1,19 +1,13 @@
 package com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.Id;
-import jakarta.persistence.Column;
+import com.carozzi.expirytracker.domain.model.ProductStatus;
+
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 @Entity
 @Table(name = "products", uniqueConstraints = {
@@ -24,7 +18,7 @@ import lombok.Builder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductEntity {
+public class ProductEntity extends AuditableEntity {
 
 	@Id
 	@Column(name = "id", updatable = false, nullable = false)
@@ -47,4 +41,17 @@ public class ProductEntity {
 
 	@Column(nullable = false)
 	private String category;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "status", nullable = false, length = 20)
+	private ProductStatus status;
+
+	/*
+	 * TODO: Future Refactoring for Collections
+	 * Actualmente usamos la implementación default de equals/hashCode (identidad de
+	 * memoria).
+	 * Si en el futuro se agregan relaciones @OneToMany (Set<ProductEntity>),
+	 * SE DEBE implementar equals/hashCode basado estrictamente en el ID (Business
+	 * Key).
+	 */
 }
