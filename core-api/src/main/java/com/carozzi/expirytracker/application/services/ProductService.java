@@ -1,24 +1,21 @@
 package com.carozzi.expirytracker.application.services;
 
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase;
+import com.carozzi.expirytracker.application.ports.in.DeleteProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.FindProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.UpdateProductUseCase;
-import com.carozzi.expirytracker.application.ports.in.DeleteProductUseCase;
 import com.carozzi.expirytracker.application.ports.out.ProductRepositoryPort;
+import com.carozzi.expirytracker.domain.model.PaginatedResult;
 import com.carozzi.expirytracker.domain.model.Product;
-import com.carozzi.expirytracker.domain.model.ProductStatus;
 import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
-
+import com.carozzi.expirytracker.domain.model.ProductStatus;
 import com.fasterxml.uuid.Generators;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.NoSuchElementException;
-import java.util.UUID;
 
 /**
  * Servicio que implementa la lógica de negocio para la gestión de productos.
@@ -40,7 +37,7 @@ public class ProductService
 	 * El uso de un 'Command' evita que el cliente intente manipular
 	 * campos sensibles como el ID o el Status manualmente.
 	 * * @return El producto creado con su ID y estado inicial asignado.
-	 * 
+	 *
 	 * @throws IllegalArgumentException si el EAN-13 y Lote ya existen.
 	 */
 	@Override
@@ -94,9 +91,8 @@ public class ProductService
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Product> findAll() {
-		// Reutilizamos la lógica de execute para asegurar el filtro de activos
-		return execute(ProductSearchCriteria.empty());
+	public PaginatedResult<Product> findAll(int page, int size) {
+		return productRepository.findAll(page, size);
 	}
 
 	/**
@@ -111,13 +107,14 @@ public class ProductService
 	 */
 	@Override
 	@Transactional(readOnly = true)
-	public List<Product> execute(ProductSearchCriteria criteria) {
+	public PaginatedResult<Product> execute(ProductSearchCriteria criteria) {
 		// Si el criterio es inválido o nulo, NO lanzamos error.
 		// En su lugar, aplicamos el filtro de seguridad (ACTIVE)
 		// y devolvemos los resultados.
 
 		ProductSearchCriteria finalCriteria = (criteria == null || criteria.isInvalid())
-				? ProductSearchCriteria.empty()
+				? new ProductSearchCriteria(null, null, null, null, null, null, ProductStatus.ACTIVE,
+						criteria != null ? criteria.page() : null, criteria != null ? criteria.size() : null)
 				: criteria;
 
 		return productRepository.findByCriteria(finalCriteria);

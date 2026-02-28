@@ -2,28 +2,24 @@ package com.carozzi.expirytracker.infrastructure.adapters.in.web;
 
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.CreateProductUseCase.CreateProductCommand;
+import com.carozzi.expirytracker.application.ports.in.DeleteProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.FindProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.UpdateProductUseCase;
 import com.carozzi.expirytracker.application.ports.in.UpdateProductUseCase.UpdateProductCommand;
-import com.carozzi.expirytracker.application.ports.in.DeleteProductUseCase;
+import com.carozzi.expirytracker.domain.model.PaginatedResult;
 import com.carozzi.expirytracker.domain.model.Product;
-import com.carozzi.expirytracker.domain.model.ProductStatus;
 import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
+import com.carozzi.expirytracker.domain.model.ProductStatus;
 import com.carozzi.expirytracker.infrastructure.adapters.in.web.dtos.ProductRequest;
-
+import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
-import java.util.NoSuchElementException;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -50,13 +46,14 @@ public class ProductController {
 	}
 
 	/**
-	 * Obtiene todos los productos ACTIVOS del inventario.
-	 * Gracias al filtro base en el PersistenceAdapter, este método ya no
-	 * devolverá productos SOLD o DISCARDED por error.
+	 * Obtiene todos los productos del inventario de forma paginada.
+	 * No aplica ningún filtro por defecto.
 	 */
 	@GetMapping
-	public ResponseEntity<List<Product>> getAll() {
-		List<Product> products = findProductUseCase.findAll();
+	public ResponseEntity<PaginatedResult<Product>> getAll(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size) {
+		PaginatedResult<Product> products = findProductUseCase.findAll(page, size);
 		return ResponseEntity.ok(products);
 	}
 
@@ -73,46 +70,41 @@ public class ProductController {
 	}
 
 	/**
-	 * Realiza una búsqueda avanzada de productos aplicando múltiples filtros
-	 * opcionales.
-	 * La lógica interna utiliza JPA Specifications para generar una consulta SQL
-	 * dinámica.
-	 * *
+	 * Realiza una búsqueda avanzada y paginada de productos aplicando múltiples
+	 * filtros opcionales.
+	 * Por defecto, si no se especifican filtros, solo busca productos ACTIVOS.
 	 * <p>
-	 * Ejemplos de uso:
-	 * </p>
-	 * <ul>
-	 * <li>Buscar fideos por nombre: {@code GET /search?name=fideo}</li>
-	 * <li>Buscar productos descartados: {@code GET /search?status=DISCARDED}</li>
-	 * <li>Buscar lotes específicos vencidos:
-	 * {@code GET /search?batch=L123&isExpired=true}</li>
-	 * </ul>
+	 * Ejemplos:
+	 * {@code /search?name=fideo&page=0&size=20}
+	 * {@code /search?status=DISCARDED}
 	 *
-	 * @param name   Filtro parcial por nombre.
-	 * @param ean    Filtro exacto por EAN-13.
-	 * @param batch  Filtro exacto por lote.
-	 * @param status Filtro por estado del producto (ACTIVE, SOLD, DISCARDED).
-	 * @return Lista de productos filtrados.
-	 * @param expiredBefore Fecha límite de vencimiento para búsqueda.
-	 * @param isExpired     Filtro booleano para obtener solo vencidos o solo
-	 *                      vigentes.
-	 * @param daysThreshold Umbral de días para búsqueda por proximidad.
-	 * @return Una {@link ResponseEntity} que contiene la lista de {@link Product}.
+	 * @param page          Número de la página a obtener (base 0).
+	 * @param size          Tamaño de la página.
+	 * @param name          Filtro parcial por nombre.
+	 * @param ean           Filtro exacto por EAN-13.
+	 * @param batch         Filtro exacto por lote.
+	 * @param expiredBefore Fecha límite de vencimiento.
+	 * @param isExpired     Filtro para obtener vencidos o vigentes.
+	 * @param daysThreshold Umbral de días para búsqueda por proximidad a vencer.
+	 * @param status        Filtro por estado del producto.
+	 * @return Una {@link ResponseEntity} que contiene el resultado paginado.
 	 */
 	@GetMapping("/search")
-	public ResponseEntity<List<Product>> search(
+	public ResponseEntity<PaginatedResult<Product>> search(
 			@RequestParam(required = false) String name,
 			@RequestParam(required = false) String ean,
 			@RequestParam(required = false) String batch,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expiredBefore,
 			@RequestParam(required = false) Boolean isExpired,
 			@RequestParam(required = false) Integer daysThreshold,
-			@RequestParam(required = false) ProductStatus status) {
+			@RequestParam(required = false) ProductStatus status,
+			@RequestParam(defaultValue = "0") Integer page,
+			@RequestParam(defaultValue = "10") Integer size) {
 
-		// Construimos el record de dominio incluyendo el campo status
-		var criteria = new ProductSearchCriteria(name, ean, batch, expiredBefore, isExpired, daysThreshold, status);
+		var criteria = new ProductSearchCriteria(name, ean, batch, expiredBefore, isExpired, daysThreshold, status, page,
+				size);
 
-		List<Product> results = findProductUseCase.execute(criteria);
+		PaginatedResult<Product> results = findProductUseCase.execute(criteria);
 		return ResponseEntity.ok(results);
 	}
 

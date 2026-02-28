@@ -1,25 +1,23 @@
 package com.carozzi.expirytracker.infrastructure.adapters.out.persistence;
 
 import com.carozzi.expirytracker.application.ports.out.ProductRepositoryPort;
+import com.carozzi.expirytracker.domain.model.PaginatedResult;
 import com.carozzi.expirytracker.domain.model.Product;
+import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
+import com.carozzi.expirytracker.domain.model.ProductStatus;
+import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities.ProductEntity;
 import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.mappers.ProductMapper;
 import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.repositories.JpaProductRepository;
-
 import jakarta.persistence.EnumType;
-
-import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
-import com.carozzi.expirytracker.infrastructure.adapters.out.persistence.entities.ProductEntity;
-import org.springframework.data.jpa.domain.Specification;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.List;
-import java.time.LocalDate;
-
-import com.carozzi.expirytracker.domain.model.ProductStatus;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -55,8 +53,10 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
 	}
 
 	@Override
-	public List<Product> findAll() {
-		return findByCriteria(ProductSearchCriteria.empty());
+	public PaginatedResult<Product> findAll(int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<ProductEntity> productPage = jpaProductRepository.findAll(pageable);
+		return toPaginatedResult(productPage);
 	}
 
 	@Override
@@ -88,7 +88,11 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
 	 * evitar mostrar productos eliminados en búsquedas generales.
 	 */
 	@Override
-	public List<Product> findByCriteria(ProductSearchCriteria criteria) {
+	public PaginatedResult<Product> findByCriteria(ProductSearchCriteria criteria) {
+		// Paginación: Usar valores del criterio o defaults.
+		int page = (criteria.page() != null && criteria.page() >= 0) ? criteria.page() : 0;
+		int size = (criteria.size() != null && criteria.size() > 0) ? criteria.size() : 10;
+		Pageable pageable = PageRequest.of(page, size);
 
 		// Determinamos el estado objetivo (Seguridad por defecto)
 		ProductStatus targetStatus = (criteria.status() != null)
@@ -105,10 +109,30 @@ public class ProductPersistenceAdapter implements ProductRepositoryPort {
 				.and(expiredBefore(criteria.expiredBefore()))
 				.and(isAboutToExpire(criteria.daysThreshold()));
 
-		// Ejecutamos y mapeamos a dominio
-		return jpaProductRepository.findAll(spec).stream()
+		// Ejecutamos la consulta paginada y mapeamos a dominio
+		Page<ProductEntity> productPage = jpaProductRepository.findAll(spec, pageable);
+		return toPaginatedResult(productPage);
+	}
+
+	/**
+	 * Convierte un objeto {@link Page} de Spring Data a nuestro
+	 * {@link PaginatedResult} del dominio.
+	 * 
+	 * @param page El objeto Page que contiene los resultados de la consulta y la
+	 *             información de paginación.
+	 * @return Un PaginatedResult con los datos mapeados al modelo de dominio.
+	 */
+	private PaginatedResult<Product> toPaginatedResult(Page<ProductEntity> page) {
+		var products = page.getContent().stream()
 				.map(productMapper::toDomain)
 				.toList();
+		return new PaginatedResult<>(
+				products,
+				page.getTotalElements(),
+				page.getTotalPages(),
+				page.getNumber(),
+				page.hasNext(),
+				page.hasPrevious());
 	}
 
 	/**

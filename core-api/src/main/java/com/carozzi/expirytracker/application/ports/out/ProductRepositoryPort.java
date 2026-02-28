@@ -1,9 +1,9 @@
 package com.carozzi.expirytracker.application.ports.out;
 
+import com.carozzi.expirytracker.domain.model.PaginatedResult;
 import com.carozzi.expirytracker.domain.model.Product;
 import com.carozzi.expirytracker.domain.model.ProductSearchCriteria;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,8 +33,15 @@ public interface ProductRepositoryPort {
    */
   boolean existsById(UUID id);
 
-  // Listar todos
-  List<Product> findAll();
+  /**
+   * Recupera todos los productos del inventario de forma paginada.
+   *
+   * @param page El número de página a recuperar (base 0).
+   * @param size El tamaño de la página.
+   * @return Un contenedor con la lista de productos y la información de
+   *         paginación.
+   */
+  PaginatedResult<Product> findAll(int page, int size);
 
   // Eliminar
   void deleteById(UUID id);
@@ -48,5 +55,5 @@ public interface ProductRepositoryPort {
    * @return Una lista de {@link Product} que cumplen los criterios,
    *         o una lista vacía si no hay coincidencias.
    */
-  List<Product> findByCriteria(ProductSearchCriteria criteria);
+  PaginatedResult<Product> findByCriteria(ProductSearchCriteria criteria);
 }

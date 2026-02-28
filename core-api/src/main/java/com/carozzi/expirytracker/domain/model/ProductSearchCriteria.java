@@ -13,14 +13,16 @@ public record ProductSearchCriteria(
 		LocalDate expiredBefore,
 		Boolean isExpired,
 		Integer daysThreshold,
-		ProductStatus status) {
+		ProductStatus status,
+		Integer page,
+		Integer size) {
 
 	/**
 	 * Crea una instancia con todos los filtros en null.
 	 * Útil para búsquedas globales donde se aplicarán los filtros por defecto.
 	 */
 	public static ProductSearchCriteria empty() {
-		return new ProductSearchCriteria(null, null, null, null, null, null, null);
+		return new ProductSearchCriteria(null, null, null, null, null, null, null, null, null);
 	}
 
 	/**
