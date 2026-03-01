@@ -9,7 +9,7 @@
 		<version>4.0.3</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.carozzi</groupId>
+	<groupId>io.app</groupId>
 	<artifactId>expiry-tracker-core</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Expiry Tracker Core</name>
